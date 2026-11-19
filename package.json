@@ -1,0 +1,19 @@
+{
+  "name": "afterglow-fm1",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A live visualizer for any M-VAVE FM-1: its sound, notes, clock and knobs, drawn as falling panels of diagonal lines.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "7.1.12",
+    "vitest": "3.2.4"
+  }
+}
