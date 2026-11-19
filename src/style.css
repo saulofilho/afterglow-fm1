@@ -1,0 +1,49 @@
+/* SPDX-License-Identifier: GPL-3.0-only
+   A black field; the panels fall down one column; the controls a thin monospaced line above. */
+:root { --void: #000; --ink: #e2e4dc; --dim: #7b7f74; --faint: #24271f; --hot: #c9e46b; --f: "Geist Mono", ui-monospace, Menlo, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: var(--void); color: var(--ink); font: 300 12px/1.5 var(--f); overflow: hidden; }
+body.overlay { background: transparent; }
+#bar { position: fixed; top: 0; left: 0; right: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+  padding: max(10px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(#000 70%, transparent); transition: opacity .4s; }
+#bar.hide { opacity: 0; pointer-events: none; }
+.mark { letter-spacing: .6em; text-transform: uppercase; margin-right: 8px; }
+button, select { font: inherit; color: var(--ink); background: #000; border: 1px solid var(--faint); padding: 5px 9px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+button:hover, select:hover { border-color: var(--dim); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 1px solid var(--hot); outline-offset: 2px; }
+button.hot, button.on { border-color: var(--hot); color: var(--hot); }
+.gain { display: flex; gap: 6px; align-items: center; color: var(--dim); letter-spacing: .12em; text-transform: uppercase; }
+.gain input { width: 90px; accent-color: var(--hot); }
+#status { color: var(--dim); flex: 1 1 200px; min-width: 0; letter-spacing: .08em; }
+#status.err { color: #ff6b5a; }
+#stage { position: absolute; inset: 0; padding: 64px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); display: flex; }
+canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.cap { position: absolute; left: 0; bottom: 0; background: #000; padding: 3px 10px 2px 0; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: var(--dim); }
+.cap b { font-weight: 400; color: var(--ink); margin-right: 1em; }
+.pan { position: relative; min-height: 0; min-width: 0; }
+
+/* cascata: the panels stacked in one column, sharing the height */
+.v-cascata { flex-direction: column; width: min(100%, 900px); margin: 0 auto; }
+.v-cascata .pan { flex: 1; }
+/* estudio: one big panel, then two thin ones and the knobs */
+#stage.v-estudio { display: grid; gap: 12px; grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr); grid-template-rows: minmax(0, 1fr) 18% 14%; }
+.v-estudio .main { grid-row: 1; grid-column: 1; }
+.v-estudio .side { grid-row: 1 / span 3; grid-column: 2; overflow: auto; display: grid; align-content: start; gap: 14px; }
+@media (max-width: 720px) { .v-estudio { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 14% 12% auto; } .v-estudio .side { grid-row: 4; grid-column: 1; max-height: 30vh; } }
+.side h2 { font-weight: 400; font-size: 10px; letter-spacing: .4em; text-transform: uppercase; color: var(--dim); margin: 0; }
+.side .title { font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
+.side .num { font-size: 28px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.prm { display: grid; gap: 3px; }
+.prm .row { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; letter-spacing: .14em; color: var(--dim); }
+.prm .row b { font-weight: 400; color: var(--ink); font-variant-numeric: tabular-nums; }
+.prm .track { height: 8px; background: var(--faint); }
+.prm .fill { height: 100%; background: repeating-linear-gradient(115deg, var(--hot) 0 1px, transparent 1px 3px); }
+/* palco: one panel, the whole window */
+.v-palco { padding: 0 !important; }
+.v-palco .pan { flex: 1; }
+/* overlay: one band at the foot, the rest transparent (for OBS) */
+.v-overlay { padding: 0 !important; align-items: flex-end; }
+.v-overlay .pan { flex: 1; height: 24%; }
+.v-palco .cap, .v-overlay .cap { opacity: .8; }
+@media (prefers-reduced-motion: reduce) { #bar { transition: none; } }

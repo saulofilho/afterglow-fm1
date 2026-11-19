@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Afterglow</title>
+<meta name="description" content="A live visualizer for any M-VAVE FM-1: its sound, notes, clock and knobs, drawn as falling panels of diagonal lines.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Cpath d='M2 14 6 2M6 14 10 2M10 14 14 2' stroke='%23c9e46b'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400&display=swap">
+</head>
+<body>
+<header id="bar">
+  <span class="mark">Afterglow</span>
+  <button id="bt-connect" class="hot">Connect FM-1</button>
+  <select id="sel-audio" aria-label="Sound input"><option value="">Sound: off</option></select>
+  <button id="bt-demo">Demo</button>
+  <select id="sel-view" aria-label="View"></select>
+  <select id="sel-pal" aria-label="Palette"></select>
+  <select id="sel-pat" aria-label="Pattern"></select>
+  <select id="sel-lines" aria-label="Line spacing"></select>
+  <label class="gain">Gain <input id="in-gain" type="range" min="0.25" max="4" step="0.05"></label>
+  <button id="bt-full" aria-label="Full screen">Full</button>
+  <span id="status">Chrome or Edge. Plug in the FM-1, or press Demo.</span>
+</header>
+<main id="stage"></main>
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>
