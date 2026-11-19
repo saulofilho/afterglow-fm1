@@ -10,11 +10,13 @@ import { findGrimm, Grimm } from "./sources/grimm";
 import { demoFill } from "./sources/demo";
 import { PATTERNS, patternById } from "./render/patterns";
 import { Panel, PALETTES, paletteById } from "./render/panel";
+import { GUIDE } from "./guide";
 import { DEFAULT, parsePreset, presetHash, type Preset, VIEWS } from "./presets";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const sig = emptySignal(), clock = new Clock(), onsets = new Onsets(), midi = new MidiIn(sig, clock), audio = new AudioIn();
-let grimm: Grimm | null = null, demo = false, panels: Panel[] = [];
+let grimm: Grimm | null = null, demo = false, panels: Panel[] = [], previews: Panel[] = [];
+const preview = emptySignal();                              // (the guide's panels: always the demo)
 
 // ------------------------------------------------------------------ the preset: the link, then what was chosen last
 let saved: Preset = DEFAULT;
@@ -31,7 +33,7 @@ function fill(sel: HTMLSelectElement, items: [string, string][], v: string) {
   sel.innerHTML = items.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
   sel.value = v;
 }
-const VIEW_NAMES: Record<string, string> = { cascata: "View: cascata", estudio: "View: estúdio", palco: "View: palco", overlay: "View: overlay" };
+const VIEW_NAMES: Record<string, string> = { guia: "View: guide", cascata: "View: cascata", estudio: "View: estúdio", palco: "View: palco", overlay: "View: overlay" };
 fill($("sel-view"), VIEWS.map((v) => [v, VIEW_NAMES[v]]), pre.view);
 fill($("sel-pal"), [["mix", "Palette: mixed"], ...PALETTES.map((p): [string, string] => [p.id, "Palette: " + p.name])], pre.pal);
 fill($("sel-pat"), PATTERNS.map((p): [string, string] => [p.id, "Pattern: " + p.name]), pre.pat);
@@ -64,10 +66,11 @@ function build() {
   const st = $("stage");
   st.className = "v-" + pre.view;
   st.innerHTML = "";
-  panels = [], side = null;
+  panels = [], previews = [], side = null;
   document.body.classList.toggle("overlay", pre.view === "overlay");
   const pal = (own: string) => (pre.pal === "mix" ? own : pre.pal);
-  if (pre.view === "cascata") PATTERNS.forEach((p) => panel(st, p.id, pal(p.pal)));
+  if (pre.view === "guia") guide(st);
+  else if (pre.view === "cascata") PATTERNS.forEach((p) => panel(st, p.id, pal(p.pal)));
   else if (pre.view === "estudio") {
     const main = patternById(pre.pat);
     panel(st, main.id, pal(main.pal), "main");
@@ -89,6 +92,71 @@ function build() {
   hideLater();
 }
 
+// ------------------------------------------------------------------ the guide: what it is, how to start, each pattern / palette / view
+const seen = new Set<Panel>();
+const io = new IntersectionObserver((es) => es.forEach((e) => { const p = previews.find((x) => x.canvas === e.target); if (p) (e.isIntersecting ? seen.add(p) : seen.delete(p)); }));
+function go(view: Preset["view"], extra: Partial<Preset> = {}) {
+  Object.assign(pre, extra, { view });
+  ($("sel-pal") as HTMLSelectElement).value = pre.pal;
+  ($("sel-pat") as HTMLSelectElement).value = pre.pat;
+  commit();
+  $("stage").scrollTop = 0;
+}
+function guide(st: HTMLElement) {
+  const g = document.createElement("div");
+  g.className = "guide";
+  g.innerHTML = `
+    <section class="hero"><h1>Afterglow</h1><p class="tagline">Your FM-1, drawn as it plays.</p><p class="lede">${GUIDE.lede}</p>
+      <div class="cta"><button class="hot" data-act="demo">Try the demo</button><button data-act="connect">Connect your FM-1</button><button data-act="skip">Skip to the visualizer</button></div></section>
+    <section><h2>How it works</h2><ol class="steps">${GUIDE.steps.map(([h, t]) => `<li><b>${h}</b><p>${t}</p></li>`).join("")}</ol><p class="muted">${GUIDE.works}</p></section>
+    <section><h2>Six patterns</h2><p class="muted">Each pattern listens to one thing in the sound. Here they run on the demo.</p><div class="pats" id="g-pats"></div></section>
+    <section><h2>Six palettes</h2><p class="muted">Pick one for every panel, or choose Mixed to let each pattern keep its own, as in the cascade.</p><div class="pals" id="g-pals"></div></section>
+    <section><h2>Four views</h2><div class="views" id="g-views"></div></section>
+    <p class="keys">Keys: 0 guide · 1 to 4 views · F full screen. Unofficial; not made or endorsed by M-VAVE.</p>`;
+  st.append(g);
+  const pats = g.querySelector("#g-pats")!;
+  PATTERNS.forEach((pt) => {
+    const t = GUIDE.patterns[pt.id], card = document.createElement("article");
+    card.className = "pat";
+    card.innerHTML = `<div class="pan"></div><div class="txt"><h3>${pt.name} <span>${t.tag}</span></h3>
+      <dl><dt>You see</dt><dd>${t.see}</dd><dt>It moves with</dt><dd>${t.moves}</dd><dt>Best for</dt><dd>${t.best}</dd></dl>
+      <button data-pat="${pt.id}">Watch it full screen</button></div>`;
+    pats.append(card);
+    const p = new Panel(pt, paletteById(pre.pal === "mix" ? pt.pal : pre.pal));
+    p.spacing = pre.lines, p.px = pre.px;
+    card.querySelector(".pan")!.append(p.canvas);
+    previews.push(p);
+    io.observe(p.canvas);
+  });
+  const pals = g.querySelector("#g-pals")!;
+  PALETTES.forEach((pl) => {
+    const c = document.createElement("article");
+    c.className = "pal" + (pre.pal === pl.id ? " on" : "");
+    c.innerHTML = `<span class="sw">${pl.c.map((x) => `<i style="background:repeating-linear-gradient(115deg, ${x} 0 1px, #000 1px 3px)"></i>`).join("")}</span>
+      <h3>${pl.name}</h3><p>${GUIDE.palettes[pl.id]}</p><button data-pal="${pl.id}">${pre.pal === pl.id ? "In use" : "Use it"}</button>`;
+    pals.append(c);
+  });
+  const mix = document.createElement("article");
+  mix.className = "pal" + (pre.pal === "mix" ? " on" : "");
+  mix.innerHTML = `<span class="sw">${PALETTES.map((pl) => `<i style="background:repeating-linear-gradient(115deg, ${pl.c[3]} 0 1px, #000 1px 3px)"></i>`).join("")}</span>
+    <h3>Mixed</h3><p>Every pattern keeps its own palette. The default.</p><button data-pal="mix">${pre.pal === "mix" ? "In use" : "Use it"}</button>`;
+  pals.append(mix);
+  g.querySelector("#g-views")!.innerHTML = GUIDE.views.map(([id, n, t], i) =>
+    `<article class="view"><h3><span>${i + 1}</span>${n}</h3><p>${t}</p><button data-view="${id}">Open ${n}</button></article>`).join("");
+  g.onclick = (e) => {
+    const b = (e.target as HTMLElement).closest("button");
+    if (!b) return;
+    const d = b.dataset;
+    if (d.act === "demo") { if (!demo) $("bt-demo").click(); go("cascata"); }
+    if (d.act === "connect") { $("bt-connect").click(); go("cascata"); }
+    if (d.act === "skip") go("cascata");
+    if (d.pat) go("palco", { pat: d.pat });
+    if (d.pal) { pre.pal = d.pal; ($("sel-pal") as HTMLSelectElement).value = d.pal; commit(); }
+    if (d.view) go(d.view as Preset["view"]);
+  };
+}
+$("bt-guide").onclick = () => go("guia");
+
 // the bar hides itself on the stage and overlay views until the pointer moves
 let hideT = 0;
 function hideLater() {
@@ -99,7 +167,7 @@ function hideLater() {
 addEventListener("pointermove", hideLater);
 addEventListener("keydown", (e) => {
   if ((e.target as HTMLElement).matches("input, select")) return;
-  const i = "1234".indexOf(e.key);
+  const i = "01234".indexOf(e.key);
   if (i >= 0) { pre.view = VIEWS[i]; commit(); }
   if (e.key === "f") $("bt-full").click();
   hideLater();
@@ -188,6 +256,7 @@ function frame(now: number) {
     if (!grimm && midi.hasCC) sig.params = midi.ccParams();
   }
   for (const p of panels) p.draw(sig);
+  if (previews.length) { demoFill(preview, sig.t); decayNotes(preview, dt); for (const p of previews) if (seen.has(p)) p.draw(preview); }
   if (side && (slow += dt) > 0.1) {
     slow = 0;
     side.title.textContent = sig.title || "—";

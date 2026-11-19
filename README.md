@@ -23,6 +23,7 @@ still to be checked on the device.
 ## Using it
 
 - **Connect FM-1** asks for MIDI (with SysEx) and the sound; **Sound** picks another input; **Demo** plays a simulated FM-1.
+- **Guide:** the first screen explains how it works and shows each pattern, palette and view, live on the demo. **Guide** (or key 0) brings it back.
 - **Views:** *cascata* (the six panels stacked), *estúdio* (one big panel, the tracks, the step and the knobs), *palco*
   (one panel, full screen), *overlay* (a band at the foot, transparent, for OBS as a browser source). Keys 1-4 switch them,
   F for full screen.

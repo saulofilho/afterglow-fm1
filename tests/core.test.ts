@@ -20,7 +20,7 @@ describe("presets", () => {
     const p = parsePreset("#view=palco&pal=cyberpunk&pat=onda&lines=9&gain=1.5");
     expect(p).toMatchObject({ view: "palco", pal: "cyberpunk", pat: "onda", lines: 6, gain: 1.5 });
     expect(parsePreset(presetHash(p))).toEqual(p);
-    expect(parsePreset("#view=nope").view).toBe("cascata");
+    expect(parsePreset("#view=nope").view).toBe("guia");
   });
 });
 

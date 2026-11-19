@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // What the viewer chose, as a link: #view=palco&pal=cyberpunk&pat=queda&lines=3&px=3&gain=1.5
 
-export const VIEWS = ["cascata", "estudio", "palco", "overlay"] as const;
+export const VIEWS = ["guia", "cascata", "estudio", "palco", "overlay"] as const;
 export type View = (typeof VIEWS)[number];
 export interface Preset { view: View; pal: string; pat: string; lines: number; px: number; gain: number }
-export const DEFAULT: Preset = { view: "cascata", pal: "mix", pat: "queda", lines: 3, px: 3, gain: 1 };
+export const DEFAULT: Preset = { view: "guia", pal: "mix", pat: "queda", lines: 3, px: 3, gain: 1 };
 
 const clampN = (v: string | null, lo: number, hi: number, def: number) => {
   const n = Number(v);
